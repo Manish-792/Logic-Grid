@@ -1,0 +1,103 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+
+@layer base {
+    :root {
+      --text: #1c1c12;
+      --background: #f5f5ea;
+      --primary: #656120;
+      --secondary: #e2dc74;
+      --accent: #bcb415;
+      --heading-font: 'Nata Sans', sans-serif;
+      --body-font: 'Share Tech', monospace;
+      --easy-color: #00CED1;
+      --medium-color: #FFD700;
+      --hard-color: #FF4500;
+    }
+    .dark {
+      --text: #eeeee4;
+      --background: #15150a;
+      --primary: #dfdb9a;
+      --secondary: #8b861d;
+      --accent: #eae244;
+      --heading-font: 'Nata Sans', sans-serif;
+      --body-font: 'Share Tech', monospace;
+      --easy-color: #00CED1;
+      --medium-color: #FFD700;
+      --hard-color: #FF4500;
+    }
+  }
+
+/* Global font application */
+body {
+  font-family: var(--body-font);
+  line-height: 1.6;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Type scale - Perfect Fourth (1.333 ratio) */
+h1 { font-size: 3.157rem; } /* 1.333^4 */
+h2 { font-size: 2.369rem; } /* 1.333^3 */
+h3 { font-size: 1.777rem; } /* 1.333^2 */
+h4 { font-size: 1.333rem; } /* 1.333^1 */
+h5 { font-size: 1rem; }     /* Base size */
+h6 { font-size: 0.75rem; }  /* 1.333^-1 */
+
+/* Body text */
+p, span, div, input, textarea, button, label {
+  font-family: var(--body-font);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+/* Form elements */
+input, textarea, select {
+  font-family: var(--body-font);
+}
+
+/* Buttons */
+button {
+  font-family: var(--body-font);
+  font-weight: 400;
+}
+
+/* Navigation and links */
+nav, a {
+  font-family: var(--body-font);
+}
+
+/* Card titles and headings within components */
+.card-title, .text-3xl, .text-2xl, .text-xl {
+  font-family: var(--heading-font);
+  font-weight: 700;
+}
+
+/* Labels and form text */
+.label-text, .form-label {
+  font-family: var(--body-font);
+  font-weight: 400;
+}
+
+/* Difficulty badge colors */
+.badge-easy {
+  background-color: var(--easy-color);
+  color: #000000;
+}
+
+.badge-medium {
+  background-color: var(--medium-color);
+  color: #000000;
+}
+
+.badge-hard {
+  background-color: var(--hard-color);
+  color: #ffffff;
+}
+  
