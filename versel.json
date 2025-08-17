@@ -7,10 +7,14 @@
       },
       {
         "source": "/(.*)",
-        "destination": "/frontend/dist/index.html"
+        "destination": "/frontend/dist/$1"
       }
     ],
     "builds": [
+      {
+        "src": "backend/src/index.js",
+        "use": "@vercel/node"
+      },
       {
         "src": "frontend/package.json",
         "use": "@vercel/static-build",
@@ -18,21 +22,6 @@
           "installCommand": "npm install",
           "buildCommand": "npm run build"
         }
-      },
-      {
-        "src": "backend/src/index.js",
-        "use": "@vercel/node",
-        "config": {
-          "includeFiles": [
-            "backend/src/**",
-            "backend/config/**",
-            "backend/models/**",
-            "backend/routes/**",
-            "backend/middleware/**",
-            "backend/utils/**"
-          ]
-        }
       }
     ]
   }
-  
