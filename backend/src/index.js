@@ -13,18 +13,29 @@ const submitRouter = require('./routes/submit');
 const aiRouter = require('./routes/aiChatting');
 const videoRouter = require('./routes/videoCreator');
 
-// The Vercel environment automatically handles environment variables.
-// No need for require('dotenv').config() in the deployment environment.
-// It's still a good practice to keep it for local development if you have a separate .env file.
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-// IMPORTANT: Use the Vercel-provided URL for a secure CORS policy.
+// IMPORTANT: A dynamic CORS policy to handle all Vercel domains.
+const allowedOrigins = [
+  'https://logicgrid.vercel.app',
+  'https://logic-grid-git-main-manish-792s-projects.vercel.app',
+  // Add other Vercel preview domains if they appear in your logs
+];
+
 app.use(cors({
-    origin: process.env.VERCEL_URL,
-    credentials: true
-  }));
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -36,24 +47,14 @@ app.use('/api/submission', submitRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/video', videoRouter);
 
-// This is a simple route to check if the server is running.
-// You can remove this if you don't need it.
 app.get('/api', (req, res) => {
   res.status(200).send('API is running!');
 });
 
-// IMPORTANT:
-// In a serverless environment, connections to databases and services
-// should be managed outside of the request handler to optimize for
-// "cold starts" and reuse. We will initialize them when the function is loaded.
-// Vercel keeps the function warm for a short period, allowing subsequent
-// requests to reuse these connections without needing to re-establish them.
-
-// Initialize database connections once.
 let isConnected = false;
 async function connectToDatabases() {
   if (isConnected) {
-    return; // Already connected, do nothing
+    return;
   }
   try {
     await Promise.all([main(), redisClient.connect()]);
@@ -61,18 +62,11 @@ async function connectToDatabases() {
     isConnected = true;
   } catch (err) {
     console.error("Error connecting to databases:", err);
-    // You might want to throw an error here to prevent the function from running
     throw err; 
   }
 }
 
-// Export the Express app as a serverless function handler.
-// Vercel will call this function to handle incoming requests.
 module.exports = async (req, res) => {
-  // Ensure database connections are established before handling the request.
   await connectToDatabases();
-  
-  // Vercel will use this Express app to handle routing for the request.
-  // The listen() method is removed, as it is not needed here.
   app(req, res);
 };
