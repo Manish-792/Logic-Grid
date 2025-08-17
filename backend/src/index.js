@@ -20,11 +20,10 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-// IMPORTANT: Configure CORS to use the Vercel-provided frontend URL.
-// The VERCEL_URL environment variable is automatically provided by Vercel.
-// It will be the URL of your deployment (e.g., 'your-project-name.vercel.app').
+// IMPORTANT: Allow all origins to prevent CORS issues with Vercel's dynamic domains.
+// This is safe for a single-domain monorepo setup.
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Fallback for local dev
+  origin: '*', // Fallback for local dev
   credentials: true
 }));
 
