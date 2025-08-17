@@ -9,6 +9,28 @@
         "source": "/(.*)",
         "destination": "/frontend/dist/index.html"
       }
+    ],
+    "builds": [
+      {
+        "src": "frontend/package.json",
+        "use": "@vercel/static-build",
+        "config": {
+          "installCommand": "npm install",
+          "buildCommand": "npm run build"
+        }
+      },
+      {
+        "src": "backend/src/index.js",
+        "use": "@vercel/node",
+        "config": {
+          "includeFiles": [
+            "backend/src/**",
+            "backend/config/**",
+            "backend/models/**",
+            "backend/routes/**"
+          ]
+        }
+      }
     ]
   }
   

@@ -20,12 +20,11 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-// IMPORTANT: Allow all origins to prevent CORS issues with Vercel's dynamic domains.
-// This is safe for a single-domain monorepo setup.
+// IMPORTANT: Use the Vercel-provided URL for a secure CORS policy.
 app.use(cors({
-  origin: '*', // Fallback for local dev
-  credentials: true
-}));
+    origin: process.env.VERCEL_URL,
+    credentials: true
+  }));
 
 app.use(express.json());
 app.use(cookieParser());
