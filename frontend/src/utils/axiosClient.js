@@ -1,7 +1,10 @@
-import axios from "axios"
+import axios from "axios";
 
-const axiosClient =  axios.create({
-    baseURL: `${import.meta.env.VITE_PUBLIC_BUILDER_KEY}/api`,
+const axiosClient = axios.create({
+    // THIS IS THE FIX. We are removing the environment variable 
+    // and using a relative path.
+    baseURL: '/api', 
+    
     withCredentials: true,
     timeout: 5000, // 5 second timeout
     headers: {
@@ -9,6 +12,4 @@ const axiosClient =  axios.create({
     }
 });
 
-
 export default axiosClient;
-
