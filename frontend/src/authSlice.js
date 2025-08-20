@@ -1,168 +1,143 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import axiosClient from './utils/axiosClient'
+const redisClient = require("../config/redis");
+const User = require("../models/user");
+const validate = require('../utils/validator');
+const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
+const Submission = require("../models/submission");
 
-// Register Thunk
-export const registerUser = createAsyncThunk(
-  'auth/register',
-  async (userData, { rejectWithValue }) => {
+
+const register = async (req, res) => {
     try {
-      const response = await axiosClient.post('/user/register', userData);
-      // The backend sets the cookie here, so we don't need to handle a token in the response data
-      console.log('Register successful, cookie set by backend.');
-      return response.data.user;
-    } catch (error) {
-      return rejectWithValue({
-        message: error.response?.data?.message || error.message || 'Registration failed',
-        status: error.response?.status
-      });
-    }
-  }
-);
+        validate(req.body);
+        const { firstName, emailId, password } = req.body;
 
-// Login Thunk
-export const loginUser = createAsyncThunk(
-  'auth/login',
-  async (credentials, { rejectWithValue }) => {
+        req.body.password = await bcrypt.hash(password, 10);
+        req.body.role = 'user'
+
+        const user = await User.create(req.body);
+        const token = jwt.sign({ _id: user._id, emailId: emailId, role: 'user' }, process.env.JWT_KEY, { expiresIn: 60 * 60 });
+        const reply = {
+            firstName: user.firstName,
+            emailId: user.emailId,
+            _id: user._id,
+            role: user.role,
+        }
+
+        // --- THE FIX IS HERE ---
+        // Set the cookie with secure, httpOnly, and SameSite='None' for cross-site requests
+        res.cookie('token', token, {
+            maxAge: 60 * 60 * 1000,
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        });
+        // --- END OF FIX ---
+
+        res.status(201).json({
+            user: reply,
+            message: "Logged In Successfully"
+        })
+    } catch (err) {
+        res.status(400).send("Error: " + err);
+    }
+}
+
+
+const login = async (req, res) => {
     try {
-      const response = await axiosClient.post('/user/login', credentials);
-      
-      // The backend sets the cookie here.
-      // We DO NOT need to store a token in localStorage.
-      console.log('Login successful, cookie set by backend.');
-      
-      // The response.data.user should be returned for the Redux state
-      return response.data.user;
-    } catch (error) {
-      return rejectWithValue({
-        message: error.response?.data?.message || error.message || 'Login failed',
-        status: error.response?.status
-      });
-    }
-  }
-);
+        const { emailId, password } = req.body;
 
-// Check Auth Thunk
-export const checkAuth = createAsyncThunk(
-  'auth/check',
-  async (_, { rejectWithValue }) => {
+        if (!emailId || !password)
+            throw new Error("Invalid Credentials");
+
+        const user = await User.findOne({ emailId });
+
+        const match = await bcrypt.compare(password, user.password);
+
+        if (!match)
+            throw new Error("Invalid Credentials");
+
+        const reply = {
+            firstName: user.firstName,
+            emailId: user.emailId,
+            _id: user._id,
+            role: user.role,
+        }
+
+        const token = jwt.sign({ _id: user._id, emailId: emailId, role: user.role }, process.env.JWT_KEY, { expiresIn: 60 * 60 });
+
+        // --- THE FIX IS HERE ---
+        // Set the cookie with secure, httpOnly, and SameSite='None' for cross-site requests
+        res.cookie('token', token, {
+            maxAge: 60 * 60 * 1000,
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        });
+        // --- END OF FIX ---
+
+        res.status(201).json({
+            user: reply,
+            message: "Logged In Successfully"
+        })
+    } catch (err) {
+        res.status(401).send("Error: " + err);
+    }
+}
+
+
+const logout = async (req, res) => {
     try {
-      // Axios will automatically send the cookie here because withCredentials is true
-      const { data } = await axiosClient.get('/user/check');
-      return data.user;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        return rejectWithValue(null); // Special case for no session
-      }
-      return rejectWithValue({
-        message: error.response?.data?.message || error.message || 'Auth check failed',
-        status: error.response?.status
-      });
-    }
-  }
-);
+        const { token } = req.cookies;
+        const payload = jwt.decode(token);
 
-// Logout Thunk
-export const logoutUser = createAsyncThunk(
-  'auth/logout',
-  async (_, { rejectWithValue }) => {
+        await redisClient.set(`token:${token}`, 'Blocked');
+        await redisClient.expireAt(`token:${token}`, payload.exp);
+
+        res.cookie("token", null, { expires: new Date(Date.now()), secure: true, sameSite: 'None', httpOnly: true });
+        res.send("Logged Out Successfully");
+
+    } catch (err) {
+        res.status(503).send("Error: " + err);
+    }
+}
+
+
+const adminRegister = async (req, res) => {
     try {
-      // Backend will clear the cookie on its end
-      await axiosClient.post('/user/logout');
-      console.log('Logout successful, backend cleared cookie.');
-      
-      // We don't need to clear localStorage anymore
-      
-      return null;
-    } catch (error) {
-      // Even if logout fails, the cookie might still be invalid.
-      console.error('Logout failed:', error);
-      return rejectWithValue({
-        message: error.response?.data?.message || error.message || 'Logout failed',
-        status: error.response?.status
-      });
+        validate(req.body);
+        const { firstName, emailId, password } = req.body;
+
+        req.body.password = await bcrypt.hash(password, 10);
+
+        const user = await User.create(req.body);
+        const token = jwt.sign({ _id: user._id, emailId: emailId, role: user.role }, process.env.JWT_KEY, { expiresIn: 60 * 60 });
+        
+        // --- THE FIX IS HERE ---
+        // Set the cookie with secure, httpOnly, and SameSite='None' for cross-site requests
+        res.cookie('token', token, {
+            maxAge: 60 * 60 * 1000,
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None'
+        });
+        // --- END OF FIX ---
+        
+        res.status(201).send("User Registered Successfully");
+    } catch (err) {
+        res.status(400).send("Error: " + err);
     }
-  }
-);
+}
 
-// authSlice remains the same from here
-const authSlice = createSlice({
-  name: 'auth',
-  initialState: {
-    user: null,
-    isAuthenticated: false,
-    loading: false,
-    error: null
-  },
-  reducers: {},
-  extraReducers: (builder) => {
-    // ... all addCase statements remain the same
-    // They will now handle the user object returned directly from the fulfilled actions
-    builder
-      .addCase(registerUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(registerUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = !!action.payload;
-        state.user = action.payload;
-      })
-      .addCase(registerUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Something went wrong';
-        state.isAuthenticated = false;
-        state.user = null;
-      })
- 
-      .addCase(loginUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = !!action.payload;
-        state.user = action.payload;
-      })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Something went wrong';
-        state.isAuthenticated = false;
-        state.user = null;
-      })
- 
-      .addCase(checkAuth.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(checkAuth.fulfilled, (state, action) => {
-        state.loading = false;
-        state.isAuthenticated = !!action.payload;
-        state.user = action.payload;
-      })
-      .addCase(checkAuth.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Something went wrong';
-        state.isAuthenticated = false;
-        state.user = null;
-      })
- 
-      .addCase(logoutUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(logoutUser.fulfilled, (state) => {
-        state.loading = false;
-        state.user = null;
-        state.isAuthenticated = false;
-        state.error = null;
-      })
-      .addCase(logoutUser.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || 'Something went wrong';
-        state.isAuthenticated = false;
-        state.user = null;
-      });
-  }
-});
+const deleteProfile = async (req, res) => {
+    try {
+        const userId = req.result._id;
+        await User.findByIdAndDelete(userId);
+        res.status(200).send("Deleted Successfully");
 
-export default authSlice.reducer;
+    } catch (err) {
+        res.status(500).send("Internal Server Error");
+    }
+}
+
+module.exports = { register, login, logout, adminRegister, deleteProfile };
