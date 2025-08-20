@@ -4,9 +4,14 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
-// Import your configuration
+// Import your configuration and routers
 const main = require('./config/db');
 const redisClient = require('./config/redis');
+const authRouter = require('./routes/userAuth');
+const problemRouter = require('./routes/problemCreator');
+const submitRouter = require('./routes/submit');
+const aiRouter = require('./routes/aiChatting');
+const videoRouter = require('./routes/videoCreator');
 
 // Only load dotenv in development environments
 if (process.env.NODE_ENV !== 'production') {
@@ -135,6 +140,13 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Connect your API routes to the Express app.
+app.use('/user', authRouter);
+app.use('/problem', problemRouter);
+app.use('/submission', submitRouter);
+app.use('/ai', aiRouter);
+app.use('/video', videoRouter);
+
 // This route will now respond to the root URL
 app.get('/', (req, res) => {
   res.status(200).send('API is running!');
@@ -161,7 +173,26 @@ app.use('*', (req, res) => {
       'GET /',
       'GET /health',
       'GET /test',
-      'GET /test/:id'
+      'GET /test/:id',
+      'POST /user/register',
+      'POST /user/login',
+      'POST /user/logout',
+      'POST /user/admin/register',
+      'DELETE /user/deleteProfile',
+      'GET /user/check',
+      'POST /problem/create',
+      'PUT /problem/update/:id',
+      'DELETE /problem/delete/:id',
+      'GET /problem/problemById/:id',
+      'GET /problem/getAllProblem',
+      'GET /problem/problemSolvedByUser',
+      'GET /problem/submittedProblem/:pid',
+      'POST /submission/submit/:id',
+      'POST /submission/run/:id',
+      'POST /ai/chat',
+      'GET /video/create/:problemId',
+      'POST /video/save',
+      'DELETE /video/delete/:problemId'
     ]
   });
 });
