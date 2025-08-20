@@ -3,11 +3,11 @@
 const requiredEnvVars = [
   'DB_CONNECT_STRING',
   'REDIS_PASS',
-  'JWT_SECRET',
+  'JWT_KEY',
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
   'CLOUDINARY_API_SECRET',
-  'GOOGLE_API_KEY'
+  'GEMINI_KEY'
 ];
 
 function validateEnvironment() {
