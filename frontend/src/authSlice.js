@@ -22,6 +22,20 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axiosClient.post('/user/login', credentials);
+      
+      // Log the full response to see what your backend is sending
+      console.log('Login response:', response.data);
+      
+      // Store the token in localStorage (adjust property name as needed)
+      const token = response.data.token || response.data.accessToken || response.data.authToken;
+      
+      if (token) {
+        localStorage.setItem('token', token);
+        console.log('Token stored:', token);
+      } else {
+        console.error('No token found in response:', response.data);
+      }
+      
       return response.data.user;
     } catch (error) {
       return rejectWithValue({
@@ -55,8 +69,16 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await axiosClient.post('/user/logout');
+      
+      // Remove token from localStorage
+      localStorage.removeItem('token');
+      console.log('Token removed from localStorage');
+      
       return null;
     } catch (error) {
+      // Even if logout fails, remove the token
+      localStorage.removeItem('token');
+      
       return rejectWithValue({
         message: error.response?.data?.message || error.message || 'Logout failed',
         status: error.response?.status
