@@ -8,14 +8,6 @@ const cors = require('cors');
 const main = require('./config/db');
 const redisClient = require('./config/redis');
 
-// Temporarily disable route imports to isolate the path-to-regexp error
-console.log('⚠️ Route imports temporarily disabled for debugging');
-// const authRouter = require('./routes/userAuth');
-// const problemRouter = require('./routes/problemCreator');
-// const submitRouter = require('./routes/submit');
-// const aiRouter = require('./routes/aiChatting');
-// const videoRouter = require('./routes/videoCreator');
-
 // Only load dotenv in development environments
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -148,36 +140,125 @@ app.get('/', (req, res) => {
   res.status(200).send('API is running!');
 });
 
+// ENHANCED DEBUGGING: Monkey patch Express to catch route registration errors
+const originalUse = app.use.bind(app);
+app.use = function(...args) {
+  console.log('🔍 ATTEMPTING TO REGISTER ROUTE:', args[0]);
+  
+  // If second argument is a router, let's inspect it
+  if (args[1] && args[1].stack) {
+    console.log('📋 Router has', args[1].stack.length, 'routes');
+    
+    // Try to inspect each route in the stack
+    args[1].stack.forEach((layer, index) => {
+      console.log(`  Route ${index + 1}:`);
+      console.log(`    Path: ${layer.route ? layer.route.path : 'middleware'}`);
+      console.log(`    Methods: ${layer.route ? Object.keys(layer.route.methods).join(', ') : 'N/A'}`);
+    });
+  }
+  
+  try {
+    return originalUse(...args);
+  } catch (error) {
+    console.error('❌ ERROR DURING ROUTE REGISTRATION:');
+    console.error('Path:', args[0]);
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
+    throw error;
+  }
+};
+
+// Let's also try to load the auth router with detailed error catching
+console.log('🔍 ATTEMPTING TO LOAD AUTH ROUTER...');
+let authRouter;
+try {
+  authRouter = require('./routes/userAuth');
+  console.log('✅ Auth router loaded successfully');
+  
+  // Let's inspect the router structure
+  if (authRouter && authRouter.stack) {
+    console.log('📋 Auth router has', authRouter.stack.length, 'routes:');
+    authRouter.stack.forEach((layer, index) => {
+      console.log(`  Route ${index + 1}:`);
+      if (layer.route) {
+        console.log(`    Path: "${layer.route.path}"`);
+        console.log(`    Methods: ${Object.keys(layer.route.methods).join(', ')}`);
+        
+        // Check for suspicious characters in the path
+        if (layer.route.path.includes(':') && !layer.route.path.match(/:[\w]+/)) {
+          console.error(`🚨 SUSPICIOUS PATH DETECTED: "${layer.route.path}"`);
+        }
+      } else {
+        console.log(`    Middleware function`);
+      }
+    });
+  }
+} catch (error) {
+  console.error('❌ ERROR LOADING AUTH ROUTER:');
+  console.error('Message:', error.message);
+  console.error('Stack:', error.stack);
+  
+  // Don't exit, just set authRouter to null
+  authRouter = null;
+}
+
 // Error handling middleware for route registration
 function safeRouteRegistration(path, router, routerName) {
-  console.log(`⏳ Attempting to register ${routerName} at path ${path}`); // <-- ADD THIS LINE
+  console.log(`⏳ Attempting to register ${routerName} at path ${path}`);
+  
+  if (!router) {
+    console.error(`❌ ${routerName} is null or undefined, skipping registration`);
+    return;
+  }
+  
   try {
     app.use(path, router);
     console.log(`✅ Successfully registered ${routerName} at ${path}`);
   } catch (error) {
     console.error(`❌ Failed to register ${routerName} at ${path}:`, error.message);
     console.error(`Stack trace:`, error.stack);
+    
+    // Additional debugging for path-to-regexp errors
+    if (error.message.includes('Missing parameter name')) {
+      console.error('🔍 This is a path-to-regexp error. Checking router for malformed paths...');
+      
+      if (router.stack) {
+        router.stack.forEach((layer, index) => {
+          if (layer.route && layer.route.path) {
+            const path = layer.route.path;
+            console.log(`  Checking route ${index + 1}: "${path}"`);
+            
+            // Check for common malformed patterns
+            if (path.includes('::')) {
+              console.error(`    🚨 FOUND DOUBLE COLON: "${path}"`);
+            }
+            if (path.includes(':/') || path.includes(':?') || path.includes(':#')) {
+              console.error(`    🚨 FOUND SUSPICIOUS PATTERN: "${path}"`);
+            }
+            if (path.match(/:[^a-zA-Z_$]/)) {
+              console.error(`    🚨 FOUND INVALID PARAMETER NAME: "${path}"`);
+            }
+            if (path.match(/:[\s]/)) {
+              console.error(`    🚨 FOUND SPACE AFTER COLON: "${path}"`);
+            }
+          }
+        });
+      }
+    }
   }
 }
 
 // Connect your API routes to the Express app with error handling
 console.log('🔗 Registering routes...');
 
-// Temporarily disable ALL route registrations to isolate the problem
-// The error is happening even without routes, so it's in the imported modules
+// Only register auth router for now to isolate the problem
+if (authRouter) {
+  safeRouteRegistration('/user', authRouter, 'authRouter');
+} else {
+  console.log('⚠️ Auth router not available, skipping registration');
+}
 
-console.log('⚠️ All route registrations temporarily disabled for debugging');
-console.log('🔍 If server starts now, the issue is in one of the route files');
-console.log('🔍 If server still fails, the issue is in database/redis connection or imported modules');
-
-// Completely disable all routes for now:
-safeRouteRegistration('/user', authRouter, 'authRouter');
-// safeRouteRegistration('/problem', problemRouter, 'problemRouter');
-// safeRouteRegistration('/submission', submitRouter, 'submitRouter');
-// safeRouteRegistration('/ai', aiRouter, 'aiRouter');
-// safeRouteRegistration('/video', videoRouter, 'videoRouter');
-
-console.log('✅ Route registration completed (all disabled)');
+console.log('✅ Route registration completed');
 
 // Error handling middleware
 app.use((err, req, res, next) => {
