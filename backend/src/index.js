@@ -60,7 +60,7 @@ function validateEnvironment() {
 }
 
 // Run validation
-validateEnvironment();
+// validateEnvironment(); // Temporarily disabled for debugging
 
 // Enhanced CORS configuration for Render deployment
 app.use(cors({
@@ -116,6 +116,15 @@ app.get('/test', (req, res) => {
   });
 });
 
+// Test route with parameter to check path-to-regexp
+app.get('/test/:id', (req, res) => {
+  res.status(200).json({
+    message: 'Parameter route working!',
+    id: req.params.id,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint for Render
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -128,10 +137,10 @@ app.get('/health', (req, res) => {
 
 // Connect your API routes to the Express app.
 app.use('/user', authRouter);
-app.use('/problem', problemRouter);
-app.use('/submission', submitRouter);
-app.use('/ai', aiRouter);
-app.use('/video', videoRouter);
+// app.use('/problem', problemRouter); // Temporarily disabled for debugging
+// app.use('/submission', submitRouter); // Temporarily disabled for debugging
+// app.use('/ai', aiRouter); // Temporarily disabled for debugging
+// app.use('/video', videoRouter); // Temporarily disabled for debugging
 
 // This route will now respond to the root URL
 app.get('/', (req, res) => {
