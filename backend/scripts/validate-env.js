@@ -7,17 +7,26 @@ const requiredEnvVars = [
   'CLOUDINARY_CLOUD_NAME',
   'CLOUDINARY_API_KEY',
   'CLOUDINARY_API_SECRET',
-  'GEMINI_KEY'
+  'GEMINI_KEY',
+  'JUDGE0_KEY'
 ];
 
 function validateEnvironment() {
+  console.log('🔍 Checking environment variables...');
+  console.log('Environment:', process.env.NODE_ENV || 'development');
+  
   const missing = [];
+  const available = [];
   
   requiredEnvVars.forEach(envVar => {
-    if (!process.env[envVar]) {
+    if (process.env[envVar]) {
+      available.push(envVar);
+    } else {
       missing.push(envVar);
     }
   });
+  
+  console.log('✅ Available environment variables:', available);
   
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');

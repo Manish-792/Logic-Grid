@@ -23,3 +23,5 @@ services:
         sync: false
       - key: GEMINI_KEY
         sync: false
+      - key: JUDGE0_KEY
+        sync: false

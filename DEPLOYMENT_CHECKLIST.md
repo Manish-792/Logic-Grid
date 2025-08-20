@@ -25,7 +25,8 @@
 - [ ] `CLOUDINARY_CLOUD_NAME` - Cloudinary cloud name
 - [ ] `CLOUDINARY_API_KEY` - Cloudinary API key
 - [ ] `CLOUDINARY_API_SECRET` - Cloudinary API secret
-- [ ] `GOOGLE_API_KEY` - Google AI API key
+- [ ] `GEMINI_KEY` - Google AI API key
+- [ ] `JUDGE0_KEY` - Judge0 API key
 - [ ] `NODE_ENV` - Set to "production"
 
 ### ✅ External Services

@@ -26,7 +26,10 @@ Set these environment variables in your Render dashboard:
 - `CLOUDINARY_API_SECRET`: Your Cloudinary API secret
 
 ### Google AI Configuration
-- `GOOGLE_API_KEY`: Your Google AI API key
+- `GEMINI_KEY`: Your Google AI API key
+
+### Judge0 Configuration (for code execution)
+- `JUDGE0_KEY`: Your Judge0 API key
 
 ### Environment
 - `NODE_ENV`: Set to `production`
