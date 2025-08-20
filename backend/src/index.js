@@ -80,7 +80,8 @@ app.use(cors({
       'localhost:3000',
       'localhost:5173',
       '127.0.0.1:3000',
-      '127.0.0.1:5173'
+      '127.0.0.1:5173',
+      'vercel.app'
     ];
 
     // Check if the origin matches any of the allowed domains
