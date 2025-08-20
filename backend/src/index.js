@@ -1,4 +1,4 @@
-// This file is the entry point for your Vercel serverless function.
+// This file is the entry point for your Render server.
 const express = require('express');
 const app = express();
 const cookieParser = require('cookie-parser');
@@ -18,15 +18,16 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-// Enhanced CORS configuration for Vercel deployment
+// Enhanced CORS configuration for Render deployment
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps, curl, or same-origin)
     if (!origin) return callback(null, true);
 
-    // Allow all Vercel domains
+    // Allow all Render domains and common frontend domains
     const allowedDomains = [
-      'vercel.app',
+      'render.com',
+      'onrender.com',
       'localhost:3000',
       'localhost:5173',
       '127.0.0.1:3000',
@@ -71,15 +72,24 @@ app.get('/test', (req, res) => {
   });
 });
 
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // Connect your API routes to the Express app.
-// Vercel's vercel.json rewrite rule handles the '/api' prefix for us.
 app.use('/user', authRouter);
 app.use('/problem', problemRouter);
 app.use('/submission', submitRouter);
 app.use('/ai', aiRouter);
 app.use('/video', videoRouter);
 
-// This route will now respond to 'https://yoursite.com/api'
+// This route will now respond to the root URL
 app.get('/', (req, res) => {
   res.status(200).send('API is running!');
 });
@@ -118,13 +128,25 @@ async function connectToDatabases() {
   }
 }
 
-// The Vercel serverless function entry point
-module.exports = async (req, res) => {
+// For Render deployment - start the server
+const PORT = process.env.PORT || 3000;
+
+async function startServer() {
   try {
     await connectToDatabases();
-    app(req, res);
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
   } catch (err) {
-    console.error("Failed to handle request:", err);
-    res.status(500).send('Internal Server Error');
+    console.error("Failed to start server:", err);
+    process.exit(1);
   }
-};
+}
+
+// Start the server if this file is run directly
+if (require.main === module) {
+  startServer();
+}
+
+// Export for testing purposes
+module.exports = app;
