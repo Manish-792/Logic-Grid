@@ -81,7 +81,8 @@ app.use(cors({
       'localhost:5173',
       '127.0.0.1:3000',
       '127.0.0.1:5173',
-      'vercel.app'
+      'vercel.app',
+      'logicgrid.vercel.app'
     ];
 
     // Check if the origin matches any of the allowed domains
@@ -118,7 +119,8 @@ app.get('/test', (req, res) => {
   res.status(200).json({
     message: 'API is working!',
     timestamp: new Date().toISOString(),
-    cors: 'enabled'
+    cors: 'enabled',
+    cookies: req.cookies
   });
 });
 

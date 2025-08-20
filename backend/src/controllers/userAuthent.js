@@ -64,10 +64,22 @@ const login = async (req,res)=>{
         }
 
         const token =  jwt.sign({_id:user._id , emailId:emailId, role:user.role},process.env.JWT_KEY,{expiresIn: 60*60});
-        res.cookie('token',token,{maxAge: 60*60*1000});
+        
+        // Set cookie with proper configuration for cross-origin
+        res.cookie('token', token, {
+          maxAge: 60*60*1000,
+          httpOnly: false, // Allow JavaScript access
+          secure: process.env.NODE_ENV === 'production', // Use secure in production
+          sameSite: 'none', // Allow cross-site cookies
+          domain: process.env.NODE_ENV === 'production' ? '.onrender.com' : undefined
+        });
+        
+        console.log('🍪 Cookie set:', { token: token.substring(0, 20) + '...', maxAge: 60*60*1000 });
+        
         res.status(201).json({
-            user:reply,
-            message:"Loggin Successfully"
+            user: reply,
+            message: "Login Successfully",
+            token: token // Also send token in response for debugging
         })
     }
     catch(err){

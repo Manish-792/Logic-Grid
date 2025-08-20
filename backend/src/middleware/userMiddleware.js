@@ -6,9 +6,19 @@ const userMiddleware = async (req,res,next)=>{
 
     try{
         
-        const {token} = req.cookies;
+        // Check for token in cookies first, then in Authorization header
+        let token = req.cookies.token;
+        
+        if (!token) {
+          // Check Authorization header
+          const authHeader = req.headers.authorization;
+          if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);
+          }
+        }
+        
         if(!token)
-            throw new Error("Token is not persent");
+            throw new Error("Token is not present");
 
         const payload = jwt.verify(token,process.env.JWT_KEY);
 
