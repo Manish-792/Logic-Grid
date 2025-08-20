@@ -4,14 +4,17 @@ const app = express();
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 
-// Import your configuration and routers
+// Import your configuration
 const main = require('./config/db');
 const redisClient = require('./config/redis');
-const authRouter = require('./routes/userAuth');
-const problemRouter = require('./routes/problemCreator');
-const submitRouter = require('./routes/submit');
-const aiRouter = require('./routes/aiChatting');
-const videoRouter = require('./routes/videoCreator');
+
+// Temporarily disable route imports to isolate the path-to-regexp error
+console.log('⚠️ Route imports temporarily disabled for debugging');
+// const authRouter = require('./routes/userAuth');
+// const problemRouter = require('./routes/problemCreator');
+// const submitRouter = require('./routes/submit');
+// const aiRouter = require('./routes/aiChatting');
+// const videoRouter = require('./routes/videoCreator');
 
 // Only load dotenv in development environments
 if (process.env.NODE_ENV !== 'production') {
@@ -159,17 +162,21 @@ function safeRouteRegistration(path, router, routerName) {
 // Connect your API routes to the Express app with error handling
 console.log('🔗 Registering routes...');
 
-// Start with just the user router to test
-safeRouteRegistration('/user', authRouter, 'authRouter');
+// Temporarily disable ALL route registrations to isolate the problem
+// The error is happening even without routes, so it's in the imported modules
 
-// Gradually enable other routes one by one after fixing environment variables
-// Uncomment these one by one after the server starts working:
+console.log('⚠️ All route registrations temporarily disabled for debugging');
+console.log('🔍 If server starts now, the issue is in one of the route files');
+console.log('🔍 If server still fails, the issue is in database/redis connection or imported modules');
+
+// Completely disable all routes for now:
+// safeRouteRegistration('/user', authRouter, 'authRouter');
 // safeRouteRegistration('/problem', problemRouter, 'problemRouter');
 // safeRouteRegistration('/submission', submitRouter, 'submitRouter');
 // safeRouteRegistration('/ai', aiRouter, 'aiRouter');
 // safeRouteRegistration('/video', videoRouter, 'videoRouter');
 
-console.log('✅ Route registration completed');
+console.log('✅ Route registration completed (all disabled)');
 
 // Error handling middleware
 app.use((err, req, res, next) => {
