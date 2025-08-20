@@ -150,6 +150,7 @@ app.get('/', (req, res) => {
 
 // Error handling middleware for route registration
 function safeRouteRegistration(path, router, routerName) {
+  console.log(`⏳ Attempting to register ${routerName} at path ${path}`); // <-- ADD THIS LINE
   try {
     app.use(path, router);
     console.log(`✅ Successfully registered ${routerName} at ${path}`);
