@@ -171,7 +171,7 @@ console.log('🔍 If server starts now, the issue is in one of the route files')
 console.log('🔍 If server still fails, the issue is in database/redis connection or imported modules');
 
 // Completely disable all routes for now:
-// safeRouteRegistration('/user', authRouter, 'authRouter');
+safeRouteRegistration('/user', authRouter, 'authRouter');
 // safeRouteRegistration('/problem', problemRouter, 'problemRouter');
 // safeRouteRegistration('/submission', submitRouter, 'submitRouter');
 // safeRouteRegistration('/ai', aiRouter, 'aiRouter');
