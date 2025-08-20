@@ -97,14 +97,6 @@ In this project, we have built a video creator application that allows administr
 
 
 
-
-
-
-📦 API Reference
----------------
-
-[Insert API documentation for the application]
-
 👤 Author
 ---------
 
