@@ -95,16 +95,55 @@ In this project, we have built a video creator application that allows administr
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/401a3bf5-dfba-40c7-be71-6441ccce29a0" />
 
 
+### 📦 API Reference
+
+**Base URL:** `https://logic-grid-backend.onrender.com`
+
+#### **1. User Authentication**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/user/register` | Registers a new user. |
+| `POST` | `/user/login` | Authenticates and logs in a user. |
+| `POST` | `/user/logout` | Logs out the current user by clearing the token. |
+| `GET` | `/user/check` | Checks if a user's session is active. |
+| `POST` | `/user/admin/register` | Registers a new administrator (requires admin privileges). |
+| `DELETE` | `/user/deleteProfile` | Deletes the current user's profile. |
+
+#### **2. Problem Management**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/problem/create` | Creates a new coding problem (admin only). |
+| `PUT` | `/problem/update/:id` | Updates an existing coding problem by ID. |
+| `DELETE` | `/problem/delete/:id` | Deletes a coding problem by ID. |
+| `GET` | `/problem/problemById/:id` | Retrieves a single problem by its ID. |
+| `GET` | `/problem/getAllProblem` | Retrieves a list of all problems. |
+| `GET` | `/problem/problemSolvedByUser` | Retrieves all problems solved by the current user. |
+| `GET` | `/problem/submittedProblem/:pid`| Retrieves a user's past submissions for a given problem. |
+
+#### **3. Code Submission & Execution**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/submission/submit/:id` | Submits code for a problem to be judged against hidden test cases. |
+| `POST` | `/submission/run/:id` | Runs code against the visible test cases. |
+
+#### **4. AI & Video**
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/ai/chat` | Interacts with the AI tutor for problem-solving help. |
+| `GET` | `/video/create/:problemId` | Generates a Cloudinary signature for video upload. |
+| `POST` | `/video/save` | Saves video metadata to the database. |
+| `DELETE`| `/video/delete/:problemId`| Deletes a video solution by problem ID. |
 
 
 👤 Author
 ---------
 
-* **Your Name**
+Manish
 
 📝 License
 ---------
 
 * **MIT License**
+This project is licensed under the MIT License, which means you are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software. The license is a simple, permissive open-source license.
 
 I hope this README file meets your expectations!
