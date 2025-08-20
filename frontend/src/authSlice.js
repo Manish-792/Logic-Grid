@@ -18,7 +18,7 @@ export const registerUser = createAsyncThunk(
 );
 
 // The loginUser thunk is now exported with a capital 'L'
-export const LoginUser = createAsyncThunk(
+export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
