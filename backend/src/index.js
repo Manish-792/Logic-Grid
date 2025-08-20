@@ -40,27 +40,32 @@ function validateEnvironment() {
   requiredEnvVars.forEach(envVar => {
     if (process.env[envVar]) {
       available.push(envVar);
+      console.log(`✅ ${envVar}: ${envVar.includes('PASS') || envVar.includes('KEY') || envVar.includes('SECRET') ? '[HIDDEN]' : process.env[envVar].substring(0, 10) + '...'}`);
     } else {
       missing.push(envVar);
     }
   });
-  
-  console.log('✅ Available environment variables:', available);
   
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');
     missing.forEach(envVar => {
       console.error(`   - ${envVar}`);
     });
-    console.error('\nPlease set these environment variables before starting the server.');
-    process.exit(1);
+    console.error('\nPlease set these environment variables in your Render dashboard.');
+    console.error('Go to: Dashboard > Your Service > Environment');
+    // Don't exit in production, just log the error
+    if (process.env.NODE_ENV === 'production') {
+      console.error('⚠️ Server will continue but may not work properly without these variables.');
+    } else {
+      process.exit(1);
+    }
+  } else {
+    console.log('✅ All required environment variables are set');
   }
-  
-  console.log('✅ All required environment variables are set');
 }
 
 // Run validation
-// validateEnvironment(); // Temporarily disabled for debugging
+validateEnvironment();
 
 // Enhanced CORS configuration for Render deployment
 app.use(cors({
@@ -135,24 +140,44 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Connect your API routes to the Express app.
-app.use('/user', authRouter);
-// app.use('/problem', problemRouter); // Temporarily disabled for debugging
-// app.use('/submission', submitRouter); // Temporarily disabled for debugging
-// app.use('/ai', aiRouter); // Temporarily disabled for debugging
-// app.use('/video', videoRouter); // Temporarily disabled for debugging
-
 // This route will now respond to the root URL
 app.get('/', (req, res) => {
   res.status(200).send('API is running!');
 });
 
+// Error handling middleware for route registration
+function safeRouteRegistration(path, router, routerName) {
+  try {
+    app.use(path, router);
+    console.log(`✅ Successfully registered ${routerName} at ${path}`);
+  } catch (error) {
+    console.error(`❌ Failed to register ${routerName} at ${path}:`, error.message);
+    console.error(`Stack trace:`, error.stack);
+  }
+}
+
+// Connect your API routes to the Express app with error handling
+console.log('🔗 Registering routes...');
+
+// Start with just the user router to test
+safeRouteRegistration('/user', authRouter, 'authRouter');
+
+// Gradually enable other routes one by one after fixing environment variables
+// Uncomment these one by one after the server starts working:
+// safeRouteRegistration('/problem', problemRouter, 'problemRouter');
+// safeRouteRegistration('/submission', submitRouter, 'submitRouter');
+// safeRouteRegistration('/ai', aiRouter, 'aiRouter');
+// safeRouteRegistration('/video', videoRouter, 'videoRouter');
+
+console.log('✅ Route registration completed');
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
+  console.error('❌ Server Error:', err.message);
+  console.error('Stack trace:', err.stack);
   res.status(500).json({
     error: 'Internal Server Error',
-    message: err.message
+    message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : err.message
   });
 });
 
@@ -162,7 +187,14 @@ app.use('*', (req, res) => {
   res.status(404).json({
     error: 'Route not found',
     method: req.method,
-    url: req.originalUrl
+    url: req.originalUrl,
+    availableRoutes: [
+      'GET /',
+      'GET /health',
+      'GET /test',
+      'GET /test/:id',
+      '/user/* (auth routes)'
+    ]
   });
 });
 
@@ -172,11 +204,12 @@ async function connectToDatabases() {
     return;
   }
   try {
+    console.log('🔌 Connecting to databases...');
     await Promise.all([main(), redisClient.connect()]);
-    console.log("Databases Connected");
+    console.log("✅ Databases Connected Successfully");
     isConnected = true;
   } catch (err) {
-    console.error("Error connecting to databases:", err);
+    console.error("❌ Error connecting to databases:", err.message);
     throw err;
   }
 }
@@ -186,15 +219,36 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
   try {
+    console.log('🚀 Starting server...');
+    console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔌 Port: ${PORT}`);
+    
     await connectToDatabases();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🎉 Server is running successfully!`);
+      console.log(`🌐 Local: http://localhost:${PORT}`);
+      console.log(`🌐 Network: http://0.0.0.0:${PORT}`);
+      console.log(`💚 Health check: http://localhost:${PORT}/health`);
+      console.log(`🧪 Test endpoint: http://localhost:${PORT}/test`);
     });
   } catch (err) {
-    console.error("Failed to start server:", err);
+    console.error("❌ Failed to start server:", err.message);
+    console.error("Stack trace:", err.stack);
     process.exit(1);
   }
 }
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('🛑 SIGTERM received, shutting down gracefully...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, shutting down gracefully...');
+  process.exit(0);
+});
 
 // Start the server if this file is run directly
 if (require.main === module) {
