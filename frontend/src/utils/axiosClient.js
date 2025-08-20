@@ -9,34 +9,24 @@ const axiosClient = axios.create({
   }
 });
 
-// Request interceptor - adds token to every request
-axiosClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor - handles token expiration
+// The response interceptor is still useful to handle 401 errors
 axiosClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid - clear storage and redirect to login
-      localStorage.removeItem('token');
-      // You might want to redirect to login page here
-      // window.location.href = '/login';
+    (response) => {
+      return response;
+    },
+    (error) => {
+      // If the server returns a 401 error, it means the session is invalid
+      // The browser will automatically clear the cookie if the server sends the correct headers
+      if (error.response?.status === 401) {
+        console.log("Authentication failed, server returned 401.");
+        // We don't need to manually remove the token from localStorage anymore
+        // The backend should be configured to clear the cookie on logout
+        
+        // Redirect to the login page
+        // window.location.href = '/login'; 
+      }
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
-  }
-);
+  );
 
 export default axiosClient;

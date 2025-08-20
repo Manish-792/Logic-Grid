@@ -1,12 +1,15 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axiosClient from './utils/axiosClient'
 
+// Register Thunk
 export const registerUser = createAsyncThunk(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-    const response =  await axiosClient.post('/user/register', userData);
-    return response.data.user;
+      const response = await axiosClient.post('/user/register', userData);
+      // The backend sets the cookie here, so we don't need to handle a token in the response data
+      console.log('Register successful, cookie set by backend.');
+      return response.data.user;
     } catch (error) {
       return rejectWithValue({
         message: error.response?.data?.message || error.message || 'Registration failed',
@@ -16,26 +19,18 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-
+// Login Thunk
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axiosClient.post('/user/login', credentials);
       
-      // Log the full response to see what your backend is sending
-      console.log('Login response:', response.data);
+      // The backend sets the cookie here.
+      // We DO NOT need to store a token in localStorage.
+      console.log('Login successful, cookie set by backend.');
       
-      // Store the token in localStorage (adjust property name as needed)
-      const token = response.data.token || response.data.accessToken || response.data.authToken;
-      
-      if (token) {
-        localStorage.setItem('token', token);
-        console.log('Token stored:', token);
-      } else {
-        console.error('No token found in response:', response.data);
-      }
-      
+      // The response.data.user should be returned for the Redux state
       return response.data.user;
     } catch (error) {
       return rejectWithValue({
@@ -46,10 +41,12 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Check Auth Thunk
 export const checkAuth = createAsyncThunk(
   'auth/check',
   async (_, { rejectWithValue }) => {
     try {
+      // Axios will automatically send the cookie here because withCredentials is true
       const { data } = await axiosClient.get('/user/check');
       return data.user;
     } catch (error) {
@@ -64,21 +61,21 @@ export const checkAuth = createAsyncThunk(
   }
 );
 
+// Logout Thunk
 export const logoutUser = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
+      // Backend will clear the cookie on its end
       await axiosClient.post('/user/logout');
+      console.log('Logout successful, backend cleared cookie.');
       
-      // Remove token from localStorage
-      localStorage.removeItem('token');
-      console.log('Token removed from localStorage');
+      // We don't need to clear localStorage anymore
       
       return null;
     } catch (error) {
-      // Even if logout fails, remove the token
-      localStorage.removeItem('token');
-      
+      // Even if logout fails, the cookie might still be invalid.
+      console.error('Logout failed:', error);
       return rejectWithValue({
         message: error.response?.data?.message || error.message || 'Logout failed',
         status: error.response?.status
@@ -87,6 +84,7 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// authSlice remains the same from here
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
@@ -95,11 +93,11 @@ const authSlice = createSlice({
     loading: false,
     error: null
   },
-  reducers: {
-  },
+  reducers: {},
   extraReducers: (builder) => {
+    // ... all addCase statements remain the same
+    // They will now handle the user object returned directly from the fulfilled actions
     builder
-      // Register User Cases
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -115,8 +113,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
       })
-  
-      // Login User Cases
+ 
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -132,8 +129,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
       })
-  
-      // Check Auth Cases
+ 
       .addCase(checkAuth.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -149,8 +145,7 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
       })
-  
-      // Logout User Cases
+ 
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
         state.error = null;
