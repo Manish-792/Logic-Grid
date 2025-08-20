@@ -2,6 +2,7 @@
 ==========================
 
 **LogicGrid:** Node.js Project with Redux, Axios, and Tailwind CSS
+
 **AI at Your Side, Logic in Your Grid.:** A modern Node.js project built with Redux, Axios, and Tailwind CSS, featuring a scalable and maintainable architecture.
 
 📖 Description
