@@ -1,9 +1,12 @@
-🚀 LogicGrid “AI at Your Side, Logic in Your Grid.”
-==========================
+# 🚀 LogicGrid
 
-**LogicGrid:** Node.js Project with Redux, Axios, and Tailwind CSS
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Visit_Site-blue?style=for-the-badge&logo=vercel)](https://logicgrid.vercel.app/signup)
 
-**AI at Your Side, Logic in Your Grid.:** A modern Node.js project built with Redux, Axios, and Tailwind CSS, featuring a scalable and maintainable architecture.
+> “AI at Your Side, Logic in Your Grid.”
+
+A modern full-stack application built with the MERN stack (MongoDB, Express.js, React, Node.js), utilizing Redux for state management and styled with Tailwind CSS.
+
+---
 
 📖 Description
 ---------------
