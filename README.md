@@ -136,15 +136,13 @@ In this project, we have built a video creator application that allows administr
 | `DELETE`| `/video/delete/:problemId`| Deletes a video solution by problem ID. |
 
 
-👤 Author
----------
+👤 **Author**
+------------
+**[Manish](https://github.com/Manish-792)**
 
-Manish
 
 📝 License
 ---------
 
 * **MIT License**
 This project is licensed under the MIT License, which means you are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software. The license is a simple, permissive open-source license.
-
-I hope this README file meets your expectations!
